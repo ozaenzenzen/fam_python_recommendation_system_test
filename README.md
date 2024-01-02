@@ -10,6 +10,10 @@ Banyak faktor yang memengaruhi pemilihan kosmetik oleh setiap orang. Dengan bany
 
 Teknologi ditujukan untuk membantu persoalan manusia. Pada saat ini sebuah teknologi berkembang pesat dalam bidang dunia teknologi informasi yaitu *Machine Learning*.[3] *Machine learning* adalah sebuah teknologi yang dikembangkan agar mesin / komputer dapat bisa belajar dengan sendirinya tanpa arahan dari penggunanya. Tentunya teknologi *machine learning* dapat digunakan untuk membantu manusia dalam mengolah data dan menarik informasi dari sebuah data sehingga manusia bisa lebih fokus dalam pengembangan bisnisnya.
 
+Sistem rekomendasi merupakan bagian dari *machine learning* yaitu *supervised learning*. Sistem rekomendasi memprediksi rating atau preferensi pengguna terhadap item tertentu. Rekomendasi ini dibuat berdasarkan perilaku pengguna di masa lalu atau perilaku pengguna lainnya. Jadi, sistem ini akan merekomendasikan sesuatu terhadap pengguna berdasarkan data perilaku atau preferensi dari waktu ke waktu. 
+
+Salah satu metode sistem rekomendasi adalah dengan metode *Content Based Filtering*. Sistem rekomendasi content-based, sistem menggunakan attribut dari data untuk menentukan rekomendasi. Contoh pada data untuk rekomendasi film, atribut yang digunakan antara lain seperti label, brand, genre, judul, author, cast dan lain-lain. Cara yang paling sederhana adalah menghitung kemiripan antar data yang terakhir dilihat dengan data semua film pada database. untuk menghitung kemiripan ada berbagai cara mulai *ecludian distance* hingga *cosine similarity*. Oleh karena itu, pada sistem rekomendasi, keluarannya berupa “top-N” recommendation. Artinya, mesin akan memberikan sejumlah rekomendasi dengan peringkat teratas sesuai preferensi pengguna. Harapannya, pengguna akan memilih rekomendasi yang diberikan dan memperpanjang interaksi pengguna di situs atau aplikasi. Selain itu, diharapkan pengguna juga melakukan transaksi pembelian terhadap item yang direkomendasikan.
+
 Pada penelitian ini akan dibuat suatu model sistem rekomendasi menggunkaan *content-based filtering* untuk merekomendasikan kosmetik-kosmetik yang mungkin akan digunakan oleh pengguna. *Content-based filtering* merupakan metode yang digunakan untuk merekomendasikan *item* atau barang berdasarkan "fitur" dari *item* berdasarkan dari aksi atau pengalaman sebelumnya. Contohnya yaitu merekomendasikan suatu buku berdasarkan kategori. Dengan adanya sistem rekomendasi ini diharapkan dapat membantu orang untuk menentukan jenis kosmetik yang akan dipilih.
 
 ## Business Understanding
@@ -34,7 +38,8 @@ Berdasarkan *Goals* yang telah diuraikan, terdapat *Solution Statements* yang ak
 - Menyiapkan data agar bisa digunakan dalam membangun sistem rekomendasi
 - Menggunakan teknik EDA (*Exploratory Data Analysis*) seperti Pendeskripsian Dataset, Penanganan *Missing Value*, *Univariate Analysis* dan *Multivariate Analysis*
 - Membuat sistem rekomendasi menggunakan teknik *Content Based Filtering*. *Content Based Filtering* adalah algoritma yang merekomendasikan item serupa dengan apa yang disukai pengguna, berdasarkan tindakan mereka sebelumnya atau umpan balik eksplisit.
-- Mengevaluasi hasil rekomendasi menggunakan *precision*
+- Tahap membangun sistem rekomendasi dilakukan dengan melakukan vektorisasi TF-IDF (*Term Frequency - Inverse Document Frequency*), kemudian tahap menghitung *cosine similarity* untuk menentukan derajat kesamaan, dan menentukan top rekomendasi dari *input*
+- Mengevaluasi hasil rekomendasi menggunakan *precision* untuk mengukur keakuratan daftar top rekomendasi yang akan dibuat. Dengan *precision* akan diukur hasil pembagian dari total rekomendasi dengan jumlah rekomendasi yang diberikan
 
 ## Data Understanding
 Data yang digunakan bersumber dari [kaggle](https://www.kaggle.com/datasets/kingabzpro/cosmetics-datasets)
@@ -157,6 +162,17 @@ Pada Image 8 disajikan visualisasi *multivariate analysis* atau persebaran antar
 Image 8. Visualisasi persebaran antar kolom numerik
 ![Visualisasi persebaran antar kolom numerik](https://github.com/ozaenzenzen/project_vehicle_log/assets/67274784/fa7ee75e-b86e-496e-a29d-fcb980fd3928)
 
+Pada Image 9 disajikan visualisasi matriks korelasi. Didapatkan beberapa informasi sebagai berikut
+- Nilai koefisien korelasi mendekati nol menyatakan rendahnya korelasi antar data
+- Nilai koefisien korelasi mendekati 1 menyatakan data berkorelasi positif
+- Nilai koefisien korelasi mendekati -1 menyatakan data berkorelasi negatif
+- Kolom `Price` dengan kolom `Rank` memiliki korelasi negatif ditunjukkan visualisasi nilai koefisien -0,03
+- Antar Kolom `'Combination','Dry', 'Normal', 'Oily', dan 'Sensitive'` saling memiliki korelasi positif. Ini ditunjukkan visualisasi nilai koefisien korelasi mendekati 1
+- Kolom `'Combination','Dry', 'Normal', 'Oily', dan 'Sensitive'` dengan kolom `Price` dan `Rank` hampir tidak memiliki korelasi. Ini ditunjukkan visualisasi koefisien korelasi mendekati 1
+
+Image 9. Visualisasi matriks korelasi
+![download (9)](https://github.com/ozaenzenzen/project_vehicle_log/assets/67274784/5a243d21-a8a0-4380-9e26-964e90bee709)
+
 
 ## Data Preparation
 Langkah dalam persiapan data dijabarkan dalam beberapa poin
@@ -223,21 +239,32 @@ Misalkan dalam sistem rekomendasi kosmetik, jika pengguna menyukai kosmetik `'Th
 
 - Tahap Vektorisasi dengan TF-IDF (*Term Frequency - Inverse Document Frequency*)
 
-    Tahap ini akan dilakukan proses vektorisasi dengan metode yang digunakan untuk menentukan nilai frekuensi sebuah kata di dalam sebuah dokumen atau artikel dan juga frekuensi di dalam banyak dokumen. Sistem rekomendasi berdasarkan `Label` yang dimiliki kosmetik. Teknik ini digunakan pada sistem rekomendasi untuk menemukan representasi fitur penting dari setiap `Label` kosmetik. Sample dari hasil tf-idf dapat dilihat pada Image 9.
+    Tahap ini akan dilakukan proses vektorisasi dengan metode yang digunakan untuk menentukan nilai frekuensi sebuah kata di dalam sebuah dokumen atau artikel dan juga frekuensi di dalam banyak dokumen. Sistem rekomendasi berdasarkan `Label` yang dimiliki kosmetik. Teknik ini digunakan pada sistem rekomendasi untuk menemukan representasi fitur penting dari setiap `Label` kosmetik. 
+    
+    Metrik ini digunakan sebagai faktor pembobotan untuk pencarian informasi, penambangan teks, atau pemodelan pengguna. Peningkatan Nilai TF-IDF secara linier dengan jumlah kemunculan suatu term dan bergantung pada jumlah dokumen dalam korpus yang memuat term tersebut. TF-IDF digunakan pada sistem rekomendasi kosmetik untuk menentukan representasi fitur penting dari setiap label kosmatik. Untuk menjalankan TF-IDF digunakan fungsi tfidfvectorizer() dari library sklearn.
 
-    Image 9. Sample vektorisasi
-    <img width="1275" alt="Screenshot 2024-01-02 at 16 48 35" src="https://github.com/ozaenzenzen/project_vehicle_log/assets/67274784/512d94da-f645-4894-a8dd-0526456b5fdb">
+Setelah itu hasil TF-IDF tadi ditransformasikan ke dalam bentuk matriks dengan fungsi todense().
 
-    Ditunjukkan pada Image 9 bahwa nilai `Tonique Radiance Clarifying Refining Toner` bertipe label `cleanser` Hal ini terlihat pada kolom `cleanser` baris ke-3
+    Sample dari hasil tf-idf dapat dilihat pada Table 7.
+
+    Table 7. Sample vektorisasi
+    <table><thead><tr><th align="right">Name</th><th align="right">moisturizer</th><th align="right">sun</th><th align="right">mask</th><th align="right">eye</th><th align="right">protect</th><th align="right">cream</th><th align="right">face</th><th align="right">cleanser</th><th>treatment</th></tr></thead><tbody><tr><td align="right">DayWear UV Base Advanced Anti-Oxidant &amp; UV Defense SPF 50</td><td align="right">0.0</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.0</td><td>0.0</td></tr><tr><td align="right">Max Mineral Naked Broad Spectrum SPF 45</td><td align="right">0.0</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.0</td><td>0.0</td></tr><tr><td align="right">Tonique Radiance Clarifying Refining Toner</td><td align="right">0.0</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">1.0</td><td>0.0</td></tr><tr><td align="right">Daywear Advanced Multi-Protection Anti-Oxidant Creme Oil-Free Broad Spectrum SPF 25</td><td align="right">0.0</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.0</td><td>0.0</td></tr><tr><td align="right">Acne Clear Control 30-Day Kit</td><td align="right">0.0</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.0</td><td>1.0</td></tr><tr><td align="right">Eye Mask - Grape - Smoothing</td><td align="right">0.0</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.0</td><td>0.0</td></tr><tr><td align="right">Matcha Toner</td><td align="right">0.0</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">1.0</td><td>0.0</td></tr><tr><td align="right">Quench Intense Hydration Mask</td><td align="right">0.0</td><td align="right">0.000000</td><td align="right">0.707107</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.707107</td><td align="right">0.0</td><td>0.0</td></tr><tr><td align="right">Capture Youth Age-Delay Advanced Crème</td><td align="right">1.0</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.0</td><td>0.0</td></tr><tr><td align="right">Refreshing Gel Cleanser</td><td align="right">0.0</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">0.000000</td><td align="right">1.0</td><td>0.0</td></tr></tbody></table>
+
+    Ditunjukkan pada Table 7 bahwa nilai `Tonique Radiance Clarifying Refining Toner` bertipe label `cleanser` Hal ini terlihat pada kolom `cleanser` baris ke-3
 
 - Tahap *Cosine Similarity*
 
     Tahap *Cosine Similarity* ditujukan untuk mengukur derajat kesamaan antara dua vektor dan menentukan apakah kedua vektor menunjuk ke arah yang sama. Cara kerja teknik ini dengan menghitung sudut cosinus antara dua vektor. Semakin kecil sudut cosinus antara dua vektor, semakin besar nilai kemiripan cosinusnya.
+    
+    Image 10. Menghitung jarak cosine similarity
+    ![190915969-92ac61ae-b1ac-44d9-9ec1-92f778c19602](https://github.com/ozaenzenzen/project_vehicle_log/assets/67274784/397a232b-41e3-4abe-bc82-f130b915f07f)
+    
+    *Cosine similarity* digunakan untuk menghitung derajat kesamaan antar data kosmetik. Untuk menjalankan cosine similarity digunakan fungsi cosine_similarity dari library sklearn. Tahap ini menghitung cosise similarity pada dataframe tfidf_matrix yang diperoleh dari tahapan TF-IDF sebelumnya.
 
-    Image 10. Sample hasil consine similarity
-    <img width="1275" alt="Screenshot 2024-01-02 at 17 02 59" src="https://github.com/ozaenzenzen/project_vehicle_log/assets/67274784/9078d154-d4f5-436c-91dd-d409f4af013a">
+    Table 8. Sample hasil consine similarity
+    <table><thead><tr><th align="right">Name</th><th align="right">GLOWSTARTER™ Mega Illuminating Moisturizer</th><th align="right">Secret Sauce Clinically Advanced Miraculous Anti-Aging Moisturizer</th><th align="right">Invisimatte Blotting Paper</th><th align="right">Water Pocket Sheet Mask Water Bank (Moisturizing)</th><th align="right">Immortelle Divine Cream</th></tr></thead><tbody><tr><td align="right">Classic Face SPF 30 - Unscented</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">0.0</td></tr><tr><td align="right">Mist &amp; Fix Setting Spray</td><td align="right">1.0</td><td align="right">1.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">1.0</td></tr><tr><td align="right">Liquid Facial Soap</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">1.0</td><td align="right">0.0</td><td align="right">0.0</td></tr><tr><td align="right">Benefiance WrinkleResist24 Day Emulsion Broad Spectrum SPF 18</td><td align="right">1.0</td><td align="right">1.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">1.0</td></tr><tr><td align="right">Matcha Toner</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">1.0</td><td align="right">0.0</td><td align="right">0.0</td></tr><tr><td align="right">BIENFAIT MULTI-VITAL - SPF 30 CREAM - High Potency Vitamin Enriched Daily Moisturizing Cream</td><td align="right">1.0</td><td align="right">1.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">1.0</td></tr><tr><td align="right">Dark Circle Corrector Set</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">0.0</td></tr><tr><td align="right">Bio-Performance LiftDynamic Cream</td><td align="right">1.0</td><td align="right">1.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">1.0</td></tr><tr><td align="right">Hydro-Dynamic® Ultimate Moisture</td><td align="right">1.0</td><td align="right">1.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">1.0</td></tr><tr><td align="right">Mud Mask Purifying &amp; Mattifying</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">0.0</td><td align="right">1.0</td><td align="right">0.0</td></tr></tbody></table>
 
-    Pada Image 10 dituntukkan kesamaan antara satu nama kosmetik dengan nama kosmetik lainnya. Pada nama kosmetik `Mist & Fix Setting Spray` memiliki Label yang sama dengan nama kosmetik `Secret Sauce Clinically Advanced Miraculous Anti-Aging Moisturizer`, kesamaan ini ditandai dengan nilai 1 pada matriks. Kedua kosmetik tersebut termasuk ke dalam Label `Moisturizer`
+    Pada Table 8 dituntukkan kesamaan antara satu nama kosmetik dengan nama kosmetik lainnya. Pada nama kosmetik `Mist & Fix Setting Spray` memiliki Label yang sama dengan nama kosmetik `Secret Sauce Clinically Advanced Miraculous Anti-Aging Moisturizer`, kesamaan ini ditandai dengan nilai 1 pada matriks. Kedua kosmetik tersebut termasuk ke dalam Label `Moisturizer`
 
 - Tahap Get Recommendation 
 
@@ -282,7 +309,7 @@ Penelitian ini telah  menerapkan langkah persiapan data *Video Game Sales* mengg
 
 Mengacu kepada *business understanding* yang ditulis pada awal laporan, penelitian ini telah berhasil membuat sistem rekomendasi kosmetik yang disukai pengguna dengan menerapkan tahap vektorisasi TF-IDF dan menghitung *Cosine Similarity*. Kemudian telah dilakukan pembuatan daftar top rekomendasi berdasarkan *input* atau masukkan yaitu nama kosmetik
 
-Dari penlitian ini, sudah dilakukan pembangunan sistem rekmendasi kosmetik yang dapat membantu orang untuk menentukan kosmetik dari pengalaman pengguna lainnya 
+Dari penlitian ini, sudah dilakukan pembangunan sistem rekmendasi kosmetik yang dapat membantu orang untuk menentukan kosmetik dari pengalaman pengguna lainnya. Penelitian ini dapat menjadi acuan untuk mengimplementasikan sistem secara kompleks untuk membantu pengguna kosmetik dalam memilih kosmetik. Implementasi lanjutan dapat dilakukan secara *hybrid*  dengan mengkombinasikan hasil rekomendasi dengan review dan arahan penjual atau *full automation* berdasasrkan sistem kompleks yang dibuat. Dampak positif yang terjadi adalah meningkatnya kepuasan pengguna dikarenakan efisien dan efektifitas sistem yang digunakan.
 
 
 ## Referensi
